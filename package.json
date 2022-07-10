@@ -1,0 +1,15 @@
+{
+    "name": "com.meorge.vibrato",
+    "version": "0.0.1",
+    "dependencies": {
+        "com.unity.inputsystem": "1.0.0"
+    },
+
+    "displayName": "Vibrato",
+    "description": "A small system for haptic feedback",
+
+    "author": {
+        "name": "Malcolm Anderson",
+        "url": "https://meorge.github.io"
+    }
+}
