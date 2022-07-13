@@ -11,6 +11,8 @@ namespace Meorge.Vibrato
         private readonly List<VibrationProfileInstance> m_ActiveProfiles = new List<VibrationProfileInstance>();
         private readonly List<VibrationChannel> m_Channels = new List<VibrationChannel>();
 
+        private bool m_notifiedAboutNoGamepad = false;
+
         /// <summary>
         /// 
         /// </summary>
@@ -101,9 +103,17 @@ namespace Meorge.Vibrato
         {
             if (Gamepad.current == null)
             {
-                Debug.LogError("No current gamepad");
+                if (!m_notifiedAboutNoGamepad)
+                {
+                    Debug.LogError("Gamepad.current is null, so haptics won't be sent.");
+                }
+
+                m_notifiedAboutNoGamepad = true;
+                
                 return;
             }
+
+            m_notifiedAboutNoGamepad = false;
 
             LowFrequency = 0f;
             HighFrequency = 0f;
@@ -128,6 +138,9 @@ namespace Meorge.Vibrato
 
         private void OnDisable()
         {
+            if (Gamepad.current == null)
+                return;
+            
             Gamepad.current.ResetHaptics();
         }
     }
