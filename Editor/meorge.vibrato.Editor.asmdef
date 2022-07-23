@@ -1,0 +1,4 @@
+{
+  "name": "meorge.vibrato.Editor",
+  "references": ["meorge.vibrato"]
+}

@@ -33,7 +33,7 @@ namespace Meorge.Vibrato
         /// </summary>
         /// <param name="channelName"></param>
         /// <returns></returns>
-        private VibrationChannel GetChannelFromName(string channelName)
+        public VibrationChannel GetChannelFromName(string channelName)
         {
             return m_Channels.Find(a => a.Name == channelName);
         }
@@ -86,6 +86,8 @@ namespace Meorge.Vibrato
         public VibrationChannel AddChannel(string channelName, float magnitude = 1f)
         {
             var newChannel = new VibrationChannel();
+            newChannel.Name = channelName;
+            newChannel.Magnitude = magnitude;
             m_Channels.Add(newChannel);
             return newChannel;
         }
@@ -135,6 +137,22 @@ namespace Meorge.Vibrato
             
             Gamepad.current.SetMotorSpeeds(LowFrequency, HighFrequency);
         }
+
+        // private void OnGUI()
+        // {
+        //     GUILayout.BeginArea(new Rect(500, 500, 200, 400));
+        //     m_ActiveProfiles.ForEach((a) =>
+        //     {
+        //         GUILayout.Label($"{a.Name} = {a.Magnitude * a.Channel.Magnitude}");
+        //     });
+        //     GUILayout.EndArea();
+        //     
+        //     GUILayout.BeginArea(new Rect(800, 500, 200, 400));
+        //     GUILayout.Label("----");
+        //     GUILayout.Label($"LF: {LowFrequency}");
+        //     GUILayout.Label($"HF: {HighFrequency}");
+        //     GUILayout.EndArea();
+        // }
 
         private void OnDisable()
         {

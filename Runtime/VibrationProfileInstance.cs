@@ -33,6 +33,8 @@ namespace Meorge.Vibrato
         /// </summary>
         public VibrationChannel Channel => m_Channel;
         
+        public string Name => m_Profile.name;
+        
         private VibrationProfile m_Profile;
         private float m_T;
         private VibrationChannel m_Channel;
