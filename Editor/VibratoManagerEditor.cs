@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Collections;
 using UnityEditor;
@@ -9,11 +10,8 @@ namespace Meorge.Vibrato.Editor
     {
         public override void OnInspectorGUI()
         {
-            GUILayout.Label("hello there");
-
-            var t = target as VibratoManager;
-            
-            
+            GUILayout.Label($"Low Frequency: {VibratoManager.LowFrequency}");
+            GUILayout.Label($"High Frequency: {VibratoManager.HighFrequency}");
         }
     }
 }
