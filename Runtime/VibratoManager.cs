@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 
 namespace Meorge.Vibrato
 {
+    [AddComponentMenu("")]
     public class VibratoManager : MonoBehaviour
     {
         internal static VibratoManager instance = null;
@@ -22,6 +23,13 @@ namespace Meorge.Vibrato
                 Debug.LogError("Instance of VibratoManager already exists - this shouldn't happen!");
                 Destroy(gameObject);
             }
+        }
+
+        public static void Initialize()
+        {
+            if (instance != null) return;
+            var obj = new GameObject("Vibrato Manager");
+            obj.AddComponent<VibratoManager>();
         }
 
         internal readonly List<VibrationProfileInstance> m_ActiveProfiles = new List<VibrationProfileInstance>();
@@ -51,6 +59,7 @@ namespace Meorge.Vibrato
         /// <returns></returns>
         public static VibrationChannel GetChannelFromName(string channelName)
         {
+            Initialize();
             return instance.m_Channels.Find(a => a.Name == channelName);
         }
 
@@ -65,6 +74,7 @@ namespace Meorge.Vibrato
         public static VibrationProfileInstance Play([NotNull] VibrationProfile profile, VibrationChannel channel,
             float magnitude = 1f)
         {
+            Initialize();
             if (profile == null)
                 throw new ArgumentNullException(nameof(profile));
 
@@ -86,6 +96,7 @@ namespace Meorge.Vibrato
         /// <exception cref="ArgumentNullException"></exception>
         public static VibrationProfileInstance Play([NotNull] VibrationProfile profile, string channelName, float magnitude = 1f)
         {
+            Initialize();
             if (profile == null)
                 throw new ArgumentNullException(nameof(profile));
 
@@ -101,6 +112,7 @@ namespace Meorge.Vibrato
         /// <returns></returns>
         public static VibrationChannel AddChannel(string channelName, float magnitude = 1f)
         {
+            Initialize();
             var newChannel = new VibrationChannel
             {
                 Name = channelName,
@@ -116,6 +128,7 @@ namespace Meorge.Vibrato
         /// <param name="channel"></param>
         public static void RemoveChannel(VibrationChannel channel)
         {
+            Initialize();
             instance.m_Channels.Remove(channel);
         }
 
@@ -156,21 +169,21 @@ namespace Meorge.Vibrato
             Gamepad.current.SetMotorSpeeds(LowFrequency, HighFrequency);
         }
 
-        private void OnGUI()
-        {
-            GUILayout.BeginArea(new Rect(500, 500, 200, 400));
-            m_ActiveProfiles.ForEach((a) =>
-            {
-                GUILayout.Label($"{a.Name} = {a.Magnitude * a.Channel.Magnitude}");
-            });
-            GUILayout.EndArea();
-            
-            GUILayout.BeginArea(new Rect(800, 500, 200, 400));
-            GUILayout.Label("----");
-            GUILayout.Label($"LF: {LowFrequency}");
-            GUILayout.Label($"HF: {HighFrequency}");
-            GUILayout.EndArea();
-        }
+        // private void OnGUI()
+        // {
+        //     GUILayout.BeginArea(new Rect(500, 500, 200, 400));
+        //     m_ActiveProfiles.ForEach((a) =>
+        //     {
+        //         GUILayout.Label($"{a.Name} = {a.Magnitude * a.Channel.Magnitude}");
+        //     });
+        //     GUILayout.EndArea();
+        //     
+        //     GUILayout.BeginArea(new Rect(800, 500, 200, 400));
+        //     GUILayout.Label("----");
+        //     GUILayout.Label($"LF: {LowFrequency}");
+        //     GUILayout.Label($"HF: {HighFrequency}");
+        //     GUILayout.EndArea();
+        // }
 
         private void OnDisable()
         {
