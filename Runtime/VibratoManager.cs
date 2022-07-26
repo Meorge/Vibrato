@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -38,6 +39,8 @@ namespace Meorge.Vibrato
 
         internal readonly List<VibrationProfileInstance> m_ActiveProfiles = new List<VibrationProfileInstance>();
         internal readonly List<VibrationChannel> m_Channels = new List<VibrationChannel>();
+
+        public static readonly ReadOnlyCollection<VibrationChannel> Channels = new(instance.m_Channels);
 
         internal bool m_notifiedAboutNoGamepad = false;
 
