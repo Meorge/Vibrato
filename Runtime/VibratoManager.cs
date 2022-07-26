@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -23,6 +24,9 @@ namespace Meorge.Vibrato
                 Debug.LogError("Instance of VibratoManager already exists - this shouldn't happen!");
                 Destroy(gameObject);
             }
+            
+            // Set up debug info
+            SetUpDebug();
         }
 
         public static void Initialize()
@@ -165,25 +169,124 @@ namespace Meorge.Vibrato
             });
 
             m_ActiveProfiles.RemoveAll(i => instancesToRemove.Contains(i));
+
+            LowFrequency = Mathf.Clamp01(LowFrequency);
+            HighFrequency = Mathf.Clamp01(HighFrequency);
             
             Gamepad.current.SetMotorSpeeds(LowFrequency, HighFrequency);
+
+            if (DebugDisplay)
+            {
+                m_frequencyHistory.Add((Time.time, (LowFrequency, HighFrequency)));
+                while (m_frequencyHistory.Count > graphWindowRect.width)
+                    m_frequencyHistory.RemoveAt(0);
+            }
+
         }
 
-        // private void OnGUI()
-        // {
-        //     GUILayout.BeginArea(new Rect(500, 500, 200, 400));
-        //     m_ActiveProfiles.ForEach((a) =>
-        //     {
-        //         GUILayout.Label($"{a.Name} = {a.Magnitude * a.Channel.Magnitude}");
-        //     });
-        //     GUILayout.EndArea();
-        //     
-        //     GUILayout.BeginArea(new Rect(800, 500, 200, 400));
-        //     GUILayout.Label("----");
-        //     GUILayout.Label($"LF: {LowFrequency}");
-        //     GUILayout.Label($"HF: {HighFrequency}");
-        //     GUILayout.EndArea();
-        // }
+        public static bool DebugDisplay = false;
+        
+        private Material graphMaterial = null;
+        private List<(float, (float, float))> m_frequencyHistory = new List<(float, (float, float))>();
+        private Rect graphWindowRect = new Rect(100, 100, 300, 300);
+
+        private Rect graphRect =>
+            new Rect(graphWindowRect.position, graphWindowRect.size);
+
+        private float graphPadding = 25f;
+        
+        private void SetUpDebug()
+        {
+            graphWindowRect.x = Screen.width - graphWindowRect.width - 25;
+            graphWindowRect.y = Screen.height - graphWindowRect.height - 25;
+        }
+        
+        private void OnGUI()
+        {
+            if (!DebugDisplay) return;
+            
+            if (!graphMaterial) graphMaterial = new Material(Shader.Find("Hidden/Internal-Colored"));
+            
+            graphWindowRect = GUI.Window(0, graphWindowRect, DrawGraph, "Vibration Amplitudes");
+        }
+
+        private void DrawGraph(int winID)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            if (m_frequencyHistory.Count < 2) return;
+            
+            GL.PushMatrix();
+            GL.Clear(true, false, Color.black);
+            graphMaterial.SetPass(0);
+            
+            var leftT = m_frequencyHistory[0].Item1;
+            var rightT = m_frequencyHistory[^1].Item1;
+
+            List<(Vector2, Vector2)> mappedPoints = m_frequencyHistory.ConvertAll((input) =>
+            {
+                var remappedT = Remap(
+                    leftT, rightT,
+                    graphPadding, graphWindowRect.width - graphPadding,
+                    input.Item1);
+                
+                var remappedLF = Remap(
+                    0, 1,
+                    graphWindowRect.height - graphPadding, graphPadding,
+                    input.Item2.Item1);
+                
+                var remappedHF = Remap(
+                    0, 1,
+                    graphWindowRect.height - graphPadding, graphPadding,
+                    input.Item2.Item2);
+                return (new Vector2(remappedT, remappedLF), new Vector2(remappedT, remappedHF));
+            });
+
+            // Draw low frequency
+            GL.Begin(GL.QUADS);
+            GL.Color(Color.red);
+            for (var i = 1; i < mappedPoints.Count; i++)
+            {
+                var previousPoint = mappedPoints[i - 1].Item1;
+                var thisPoint = mappedPoints[i].Item1;
+                DrawThickLine(previousPoint, thisPoint, 2);
+            }
+            GL.End();
+            
+            // Draw high frequency
+            GL.Begin(GL.QUADS);
+            GL.Color(Color.green);
+            for (var i = 1; i < mappedPoints.Count; i++)
+            {
+                var previousPoint = mappedPoints[i - 1].Item2;
+                var thisPoint = mappedPoints[i].Item2;
+                DrawThickLine(previousPoint, thisPoint, 2);
+            }
+            GL.End();
+            
+            GL.PopMatrix();
+        }
+
+        private void DrawThickLine(Vector2 a, Vector2 b, float thickness)
+        {
+            var bToA = b - a;
+            var perp = new Vector2(bToA.y, -bToA.x).normalized;
+
+            var aPoint1 = a + thickness / 2.0f * perp;
+            var aPoint2 = a - thickness / 2.0f * perp;
+
+            var bPoint1 = b + thickness / 2.0f * perp;
+            var bPoint2 = b - thickness / 2.0f * perp;
+            
+            GL.Vertex3(aPoint1.x, aPoint1.y, 0);
+            GL.Vertex3(bPoint1.x, bPoint1.y, 0);
+            GL.Vertex3(bPoint2.x, bPoint2.y, 0);
+            GL.Vertex3(aPoint2.x, aPoint2.y, 0);
+        }
+
+        private float Remap(float a, float b, float c, float d, float x)
+        {
+            return (x - a) / (b - a) * (d - c) + c;
+        }
 
         private void OnDisable()
         {

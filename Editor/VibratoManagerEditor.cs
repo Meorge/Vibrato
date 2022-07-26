@@ -12,6 +12,8 @@ namespace Meorge.Vibrato.Editor
         {
             GUILayout.Label($"Low Frequency: {VibratoManager.LowFrequency}");
             GUILayout.Label($"High Frequency: {VibratoManager.HighFrequency}");
+
+            VibratoManager.DebugDisplay = GUILayout.Toggle(VibratoManager.DebugDisplay, "Display Debug Panel");
         }
     }
 }
