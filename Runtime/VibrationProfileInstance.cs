@@ -34,6 +34,9 @@ namespace Meorge.Vibrato
         public VibrationChannel Channel => m_Channel;
         
         public string Name => m_Profile.Name;
+
+        internal float Time => m_T;
+        internal float Duration => m_Profile.Duration;
         
         private IVibrationProfile m_Profile;
         private float m_T;
@@ -50,7 +53,7 @@ namespace Meorge.Vibrato
         {
             if (Status != ProfileInstanceStatus.Playing) return;
                 
-            m_T += Time.deltaTime;
+            m_T += UnityEngine.Time.deltaTime;
                 
             if (m_T < m_Profile.Duration) return;
                 

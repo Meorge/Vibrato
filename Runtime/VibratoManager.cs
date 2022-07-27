@@ -13,30 +13,15 @@ namespace Meorge.Vibrato
     {
         internal static VibratoManager instance = null;
 
-        private void Awake()
-        {
-            if (instance == null)
-            {
-                instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
-            else
-            {
-                Debug.LogError("Instance of VibratoManager already exists - this shouldn't happen!");
-                Destroy(gameObject);
-                return;
-            }
-            
-            // Set up debug info
-            SetUpDebug();
-        }
-
         public static void Initialize()
         {
             if (instance != null) return;
             var obj = new GameObject("Vibrato Manager");
-            obj.AddComponent<VibratoManager>();
-
+            DontDestroyOnLoad(obj);
+            var manager = obj.AddComponent<VibratoManager>();
+            instance = manager;
+            instance.SetUpDebug();
+            
             Channels = new ReadOnlyCollection<VibrationChannel>(instance.m_Channels);
         }
 
@@ -188,7 +173,32 @@ namespace Meorge.Vibrato
 
         }
 
-        public static bool DebugDisplay = false;
+        private string GetActiveProfileDebugInformation()
+        {
+            string s = "";
+
+            foreach (var channel in m_Channels)
+            {
+                string profileInfo = "";
+                int numProfiles = 0;
+                foreach (var profile in m_ActiveProfiles)
+                {
+                    if (profile.Channel != channel) continue;
+                    profileInfo += $"\t\"{profile.Name}\"\n";
+                    profileInfo += $"\t\tmag = {profile.Magnitude}\n";
+                    profileInfo += $"\t\tLF = {profile.CurrentValues().Item1}\n";
+                    profileInfo += $"\t\tHF = {profile.CurrentValues().Item2}\n";
+                    profileInfo += $"\t\t{profile.Time} / {profile.Duration}\n";
+                    numProfiles++;
+                }
+                
+                s += $"\"{channel.Name}\" mag = {channel.Magnitude}, active profiles = {numProfiles}\n{profileInfo}";
+            }
+
+            return s;
+        }
+
+        public static bool DebugDisplay = true;
         
         private Material graphMaterial = null;
         private List<(float, (float, float))> m_frequencyHistory = new List<(float, (float, float))>();
