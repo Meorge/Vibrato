@@ -33,13 +33,13 @@ namespace Meorge.Vibrato
         /// </summary>
         public VibrationChannel Channel => m_Channel;
         
-        public string Name => m_Profile.name;
+        public string Name => m_Profile.Name;
         
-        private VibrationProfile m_Profile;
+        private IVibrationProfile m_Profile;
         private float m_T;
         private VibrationChannel m_Channel;
 
-        internal VibrationProfileInstance(VibrationProfile profile, VibrationChannel channel, float magnitude = 1f)
+        internal VibrationProfileInstance(IVibrationProfile profile, VibrationChannel channel, float magnitude = 1f)
         {
             m_Profile = profile;
             m_Channel = channel;
@@ -52,11 +52,11 @@ namespace Meorge.Vibrato
                 
             m_T += Time.deltaTime;
                 
-            if (m_T < m_Profile.duration) return;
+            if (m_T < m_Profile.Duration) return;
                 
-            if (m_Profile.loop)
+            if (m_Profile.Loop)
             {
-                m_T -= m_Profile.duration;
+                m_T -= m_Profile.Duration;
             }
             else
             {
@@ -76,12 +76,8 @@ namespace Meorge.Vibrato
         /// <returns></returns>
         public (float, float) CurrentValues()
         {
-                
-            var nt = m_T / m_Profile.duration;
-            return (
-                m_Profile.lowFrequencyCurve.Evaluate(nt) * Magnitude, 
-                m_Profile.highFrequencyCurve.Evaluate(nt) * Magnitude
-            );
+            var (lf, hf) = m_Profile.Evaluate(m_T);
+            return (lf * Magnitude, hf * Magnitude);
         }
 
         /// <summary>

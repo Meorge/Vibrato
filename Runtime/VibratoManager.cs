@@ -24,6 +24,7 @@ namespace Meorge.Vibrato
             {
                 Debug.LogError("Instance of VibratoManager already exists - this shouldn't happen!");
                 Destroy(gameObject);
+                return;
             }
             
             // Set up debug info
@@ -35,12 +36,14 @@ namespace Meorge.Vibrato
             if (instance != null) return;
             var obj = new GameObject("Vibrato Manager");
             obj.AddComponent<VibratoManager>();
+
+            Channels = new ReadOnlyCollection<VibrationChannel>(instance.m_Channels);
         }
 
         internal readonly List<VibrationProfileInstance> m_ActiveProfiles = new List<VibrationProfileInstance>();
         internal readonly List<VibrationChannel> m_Channels = new List<VibrationChannel>();
 
-        public static readonly ReadOnlyCollection<VibrationChannel> Channels = new(instance.m_Channels);
+        public static ReadOnlyCollection<VibrationChannel> Channels { get; private set; } = null;
 
         internal bool m_notifiedAboutNoGamepad = false;
 
@@ -78,7 +81,7 @@ namespace Meorge.Vibrato
         /// <param name="magnitude"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static VibrationProfileInstance Play([NotNull] VibrationProfile profile, VibrationChannel channel,
+        public static VibrationProfileInstance Play([NotNull] IVibrationProfile profile, VibrationChannel channel,
             float magnitude = 1f)
         {
             Initialize();
@@ -101,7 +104,7 @@ namespace Meorge.Vibrato
         /// <param name="magnitude"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static VibrationProfileInstance Play([NotNull] VibrationProfile profile, string channelName, float magnitude = 1f)
+        public static VibrationProfileInstance Play([NotNull] IVibrationProfile profile, string channelName, float magnitude = 1f)
         {
             Initialize();
             if (profile == null)
@@ -147,17 +150,14 @@ namespace Meorge.Vibrato
                 {
                     Debug.LogError("Gamepad.current is null, so haptics won't be sent.");
                 }
-
                 m_notifiedAboutNoGamepad = true;
-                
                 return;
             }
-
             m_notifiedAboutNoGamepad = false;
 
             LowFrequency = 0f;
             HighFrequency = 0f;
-
+            
             List<VibrationProfileInstance> instancesToRemove = new List<VibrationProfileInstance>();
             m_ActiveProfiles.ForEach((i) =>
             {
@@ -165,12 +165,13 @@ namespace Meorge.Vibrato
                 var (newLf, newHf) = i.CurrentValues();
                 
                 var channelMagnitude = i.Channel.Magnitude;
-                LowFrequency += newLf * channelMagnitude * MasterMagnitude;
-                HighFrequency += newHf * channelMagnitude * MasterMagnitude;
-                
+                var lfToAdd = newLf * channelMagnitude * MasterMagnitude;
+                var hfToAdd = newHf * channelMagnitude * MasterMagnitude;
+                LowFrequency += lfToAdd;
+                HighFrequency += hfToAdd;
+
                 if (i.Completed()) instancesToRemove.Add(i);
             });
-
             m_ActiveProfiles.RemoveAll(i => instancesToRemove.Contains(i));
 
             LowFrequency = Mathf.Clamp01(LowFrequency);
