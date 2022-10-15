@@ -198,7 +198,7 @@ namespace Meorge.Vibrato
             return s;
         }
 
-        public static bool DebugDisplay = true;
+        public static bool DebugDisplay = false;
         
         private Material graphMaterial = null;
         private List<(float, (float, float))> m_frequencyHistory = new List<(float, (float, float))>();
